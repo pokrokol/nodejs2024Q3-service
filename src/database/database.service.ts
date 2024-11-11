@@ -78,4 +78,39 @@ export class Database {
       (track) => track !== id,
     );
   }
+  addArtist(artist: Artist) {
+    this.artists.push(artist);
+  }
+
+  getArtists() {
+    return this.artists;
+  }
+
+  getArtistById(id: string) {
+    return this.artists.find((artist) => artist.id === id);
+  }
+
+  updateArtist(artist: Artist) {
+    this.updateItem(this.artists, artist);
+  }
+
+  deleteArtist(id: string) {
+    this.artists = this.artists.filter((artist) => artist.id !== id);
+
+    this.tracks.forEach((track) => {
+      if (track.artistId === id) {
+        track.artistId = null;
+      }
+    });
+
+    this.albums.forEach((album) => {
+      if (album.artistId === id) {
+        album.artistId = null;
+      }
+    });
+
+    this.favorites.artists = this.favorites.artists.filter(
+      (artist) => artist !== id,
+    );
+  }
 }
