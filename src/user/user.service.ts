@@ -1,71 +1,58 @@
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { plainToInstance } from 'class-transformer';
 import { Database } from 'src/database/database.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly database: Database) {}
+  constructor(private readonly DBService: Database) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = new User(createUserDto);
-    const isUserExists = this.database.users.some(
-      (user) => user.login === newUser.login,
-    );
-
-    if (isUserExists) {
-      throw new HttpException(
-        'User with the same login already exists',
-        HttpStatus.CONFLICT,
-      );
-    }
-    this.database.users.push(newUser);
-    return newUser;
+  private findUserOrFail(id: string): User {
+    const user = this.DBService.getUserById(id);
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return this.database.users;
+  private validatePassword(user: User, oldPassword: string): void {
+    if (oldPassword !== user.password)
+      throw new ForbiddenException('Wrong password');
   }
 
-  async getUserById(userId: string): Promise<User> {
-    const foundUser = this.database.users.find((user) => user.id === userId);
-    if (!foundUser) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-    return foundUser;
+  findAll(): User[] {
+    return this.DBService.getUsers();
   }
 
-  async updateUser(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    const userToUpdate = await this.getUserById(userId);
-
-    if (userToUpdate.password !== updateUserDto.oldPassword) {
-      throw new HttpException('Incorrect old password', HttpStatus.FORBIDDEN);
-    }
-
-    userToUpdate.password = updateUserDto.newPassword;
-    userToUpdate.version += 1;
-    userToUpdate.updatedAt = Date.now();
-
-    return userToUpdate;
+  findOne(id: string): User {
+    const user = this.findUserOrFail(id);
+    return plainToInstance(User, user);
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    const userToDelete = await this.getUserById(userId);
-    const userIndex = this.database.users.findIndex(
-      (user) => user.id === userToDelete.id,
-    );
+  create(createUserDto: CreateUserDto): User {
+    const newUser = new User(createUserDto.login, createUserDto.password);
+    this.DBService.addUser(newUser);
+    return plainToInstance(User, newUser);
+  }
 
-    if (userIndex !== -1) {
-      this.database.users.splice(userIndex, 1);
-    }
+  update(id: string, updateUserDto: UpdateUserDto): User {
+    const user = this.findUserOrFail(id);
+    this.validatePassword(user, updateUserDto.oldPassword);
+
+    user.version++;
+    user.updatedAt = Date.now();
+    user.password = updateUserDto.newPassword;
+    this.DBService.updateUser(user);
+
+    return plainToInstance(User, user);
+  }
+
+  remove(id: string): void {
+    this.findUserOrFail(id); // Reuse helper for NotFoundException check
+    this.DBService.deleteUser(id);
   }
 }

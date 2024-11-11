@@ -11,7 +11,7 @@ export class User {
   createdAt: number;
   updatedAt: number;
 
-  constructor({ login, password }: Partial<User>) {
+  constructor(login: string, password: string) {
     this.id = uuidv4();
     this.login = login;
     this.password = password;
