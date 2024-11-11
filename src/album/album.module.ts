@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AlbumService } from './album.service';
 import { AlbumController } from './album.controller';
-import { Database } from 'src/database/database.service';
-
+import { DatabaseModule } from 'src/database/database.module';
 @Module({
-  imports: [Database],
+  imports: [DatabaseModule],
   controllers: [AlbumController],
   providers: [AlbumService],
 })

@@ -2,44 +2,59 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
-  Param,
   Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
-import { UpdateFavoriteDto } from './dto/update-favorite.dto';
 
-@Controller('favorites')
+@Controller('favs')
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
-  @Post()
-  create(@Body() createFavoriteDto: CreateFavoriteDto) {
-    return this.favoritesService.create(createFavoriteDto);
-  }
-
+  // Retrieve all favorite items
   @Get()
   findAll() {
     return this.favoritesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.favoritesService.findOne(+id);
+  // Add an artist to favorites
+  @Post('/artist/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addArtistToFavorites(@Param('id', ParseUUIDPipe) id: string) {
+    return this.favoritesService.addArtistToFavorites(id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateFavoriteDto: UpdateFavoriteDto,
-  ) {
-    return this.favoritesService.update(+id, updateFavoriteDto);
+  // Add an album to favorites
+  @Post('/album/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addAlbumToFavorites(@Param('id', ParseUUIDPipe) id: string) {
+    return this.favoritesService.addAlbumToFavorites(id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.favoritesService.remove(+id);
+  // Add a track to favorites
+  @Post('/track/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addTrackToFavorites(@Param('id', ParseUUIDPipe) id: string) {
+    return this.favoritesService.addTrackToFavorites(id);
+  }
+  @Delete('/artist/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeArtistFromFavorites(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.favoritesService.removeArtistFromFavorites(id);
+  }
+
+  @Delete('/album/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeAlbumFromFavorites(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.favoritesService.removeAlbumFromFavorites(id);
+  }
+
+  @Delete('/track/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeTrackFromFavorites(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.favoritesService.removeTrackFromFavorites(id);
   }
 }

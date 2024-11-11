@@ -143,4 +143,41 @@ export class Database {
       (album) => album !== id,
     );
   }
+  getFavorites() {
+    return {
+      artists: this.getItemsByIds(this.artists, this.favorites.artists),
+      albums: this.getItemsByIds(this.albums, this.favorites.albums),
+      tracks: this.getItemsByIds(this.tracks, this.favorites.tracks),
+    };
+  }
+
+  private getItemsByIds<T extends { id: string }>(
+    items: T[],
+    ids: string[],
+  ): T[] {
+    return items.filter((item) => ids.includes(item.id));
+  }
+
+  addFavorite(id: string, type: 'artists' | 'albums' | 'tracks') {
+    if (!this.favorites[type].includes(id)) this.favorites[type].push(id);
+  }
+
+  removeFavorite(id: string, type: 'artists' | 'albums' | 'tracks') {
+    this.favorites[type] = this.favorites[type].filter(
+      (favoriteId) => favoriteId !== id,
+    );
+  }
+
+  isExistFavorite(id: string, type: 'artists' | 'albums' | 'tracks') {
+    switch (type) {
+      case 'artists':
+        return this.getItemsByIds(this.artists, [id]).length > 0;
+      case 'albums':
+        return this.getItemsByIds(this.albums, [id]).length > 0;
+      case 'tracks':
+        return this.getItemsByIds(this.tracks, [id]).length > 0;
+      default:
+        return false;
+    }
+  }
 }

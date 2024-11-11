@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
-import { UpdateFavoriteDto } from './dto/update-favorite.dto';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Database } from 'src/database/database.service';
 
 @Injectable()
 export class FavoritesService {
-  create(createFavoriteDto: CreateFavoriteDto) {
-    return 'This action adds a new favorite';
-  }
+  constructor(private readonly DBService: Database) {}
 
   findAll() {
-    return `This action returns all favorites`;
+    return this.DBService.getFavorites();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} favorite`;
+  addArtistToFavorites(id: string) {
+    if (!this.DBService.isExistFavorite(id, 'artists')) {
+      throw new UnprocessableEntityException('Artist id does not exist');
+    }
+    this.DBService.addFavorite(id, 'artists');
   }
 
-  update(id: number, updateFavoriteDto: UpdateFavoriteDto) {
-    return `This action updates a #${id} favorite`;
+  addAlbumToFavorites(id: string) {
+    if (!this.DBService.isExistFavorite(id, 'albums')) {
+      throw new UnprocessableEntityException('Album id does not exist');
+    }
+    this.DBService.addFavorite(id, 'albums');
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} favorite`;
+  addTrackToFavorites(id: string) {
+    if (!this.DBService.isExistFavorite(id, 'tracks')) {
+      throw new UnprocessableEntityException('Track id does not exist');
+    }
+    this.DBService.addFavorite(id, 'tracks');
+  }
+
+  removeArtistFromFavorites(id: string) {
+    this.DBService.removeFavorite(id, 'artists');
+  }
+
+  removeAlbumFromFavorites(id: string) {
+    this.DBService.removeFavorite(id, 'albums');
+  }
+
+  removeTrackFromFavorites(id: string) {
+    this.DBService.removeFavorite(id, 'tracks');
   }
 }
