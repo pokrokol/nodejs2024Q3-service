@@ -6,7 +6,7 @@ import { UserModule } from './user/user.module';
 import { TrackModule } from './track/track.module';
 import { AlbumModule } from './album/album.module';
 import { FavoritesModule } from './favorites/favorites.module';
-import { DatabaseService } from './database/database.service';
+import { Database } from './database/database.service';
 import { DatabaseModule } from './database/database.module';
 
 @Module({
@@ -19,6 +19,6 @@ import { DatabaseModule } from './database/database.module';
     DatabaseModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DatabaseService],
+  providers: [AppService, Database],
 })
 export class AppModule {}
