@@ -113,4 +113,34 @@ export class Database {
       (artist) => artist !== id,
     );
   }
+
+  addAlbum(album: Album) {
+    this.albums.push(album);
+  }
+
+  getAlbums() {
+    return this.albums;
+  }
+
+  getAlbumById(id: string) {
+    return this.albums.find((album) => album.id === id);
+  }
+
+  updateAlbum(album: Album) {
+    this.updateItem(this.albums, album);
+  }
+
+  deleteAlbum(id: string) {
+    this.albums = this.albums.filter((album) => album.id !== id);
+
+    this.tracks.forEach((track) => {
+      if (track.albumId === id) {
+        track.albumId = null;
+      }
+    });
+
+    this.favorites.albums = this.favorites.albums.filter(
+      (album) => album !== id,
+    );
+  }
 }
