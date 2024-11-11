@@ -6,10 +6,19 @@ import { UserModule } from './user/user.module';
 import { TrackModule } from './track/track.module';
 import { AlbumModule } from './album/album.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { DatabaseService } from './database/database.service';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
-  imports: [ArtistModule, UserModule, TrackModule, AlbumModule, FavoritesModule],
+  imports: [
+    ArtistModule,
+    UserModule,
+    TrackModule,
+    AlbumModule,
+    FavoritesModule,
+    DatabaseModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DatabaseService],
 })
 export class AppModule {}
