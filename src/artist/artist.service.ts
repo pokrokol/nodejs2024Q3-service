@@ -3,48 +3,45 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { plainToClass } from 'class-transformer';
-import { Database } from 'src/database/database.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ArtistService {
-  constructor(private readonly DBService: Database) {}
+  constructor(private prisma: PrismaService) {}
 
-  findAll(): Artist[] {
-    return this.DBService.getArtists().map((artist) =>
-      plainToClass(Artist, artist),
-    );
+  async findAll(): Promise<Artist[]> {
+    return await this.prisma.artist.findMany();
   }
 
-  findOne(id: string): Artist {
-    const artist = this.DBService.getArtistById(id);
+  async findOne(id: string): Promise<Artist> {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
       throw new NotFoundException('Artist not found');
     }
     return plainToClass(Artist, artist);
   }
 
-  create(createArtistDto: CreateArtistDto): Artist {
-    const artist = new Artist(createArtistDto.name, createArtistDto.grammy);
-    this.DBService.addArtist(artist);
-    return plainToClass(Artist, artist);
+  async create(createArtistDto: CreateArtistDto): Promise<Artist> {
+    return await this.prisma.artist.create({ data: createArtistDto });
   }
 
-  update(id: string, updArtistDto: UpdateArtistDto): Artist {
-    const artist = this.DBService.getArtistById(id);
+  async update(id: string, updArtistDto: UpdateArtistDto): Promise<Artist> {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
       throw new NotFoundException('Artist not found');
     }
-    artist.name = updArtistDto.name;
-    artist.grammy = updArtistDto.grammy;
-    this.DBService.updateArtist(artist);
-    return plainToClass(Artist, artist);
+    const updatedArtist = await this.prisma.artist.update({
+      where: { id },
+      data: { ...updArtistDto },
+    });
+    return plainToClass(Artist, updatedArtist);
   }
 
-  remove(id: string): void {
-    const artist = this.DBService.getArtistById(id);
+  async remove(id: string): Promise<void> {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
       throw new NotFoundException('Artist not found');
     }
-    this.DBService.deleteArtist(id);
+    await this.prisma.artist.delete({ where: { id } });
   }
 }
