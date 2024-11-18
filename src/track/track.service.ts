@@ -1,51 +1,61 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { Database } from 'src/database/database.service';
 import { plainToClass } from 'class-transformer';
 import { Track } from './entities/track.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class TrackService {
-  constructor(private readonly DBService: Database) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(): Track[] {
-    return this.DBService.getTracks();
+  // Fetch all tracks
+  async findAll(): Promise<Track[]> {
+    const tracks = await this.prisma.track.findMany();
+    return tracks.map((track) => this.transformToTrackEntity(track));
   }
 
-  findOne(id: string): Track {
-    const track = this.DBService.getTrackById(id);
-    if (!track) throw new NotFoundException('Track not found');
-    return plainToClass(Track, track);
+  // Fetch a single track by ID
+  async findOne(id: string): Promise<Track> {
+    const track = await this.findTrackOrThrow(id);
+    return this.transformToTrackEntity(track);
   }
 
-  create(createTrackDto: CreateTrackDto): Track {
-    const track = new Track(
-      createTrackDto.name,
-      createTrackDto.artistId || null,
-      createTrackDto.albumId || null,
-      createTrackDto.duration,
-    );
-    this.DBService.addTrack(track);
-    return plainToClass(Track, track);
-  }
-
-  update(id: string, updateTrackDto: UpdateTrackDto): Track {
-    const track = this.findOne(id);
-
-    Object.assign(track, {
-      name: updateTrackDto.name || track.name,
-      artistId: updateTrackDto.artistId ?? track.artistId,
-      albumId: updateTrackDto.albumId ?? track.albumId,
-      duration: updateTrackDto.duration ?? track.duration,
+  // Create a new track
+  async create(createTrackDto: CreateTrackDto): Promise<Track> {
+    const track = await this.prisma.track.create({
+      data: { ...createTrackDto },
     });
-
-    this.DBService.updateTrack(track);
-    return plainToClass(Track, track);
+    return this.transformToTrackEntity(track);
   }
 
-  remove(id: string): void {
-    this.findOne(id);
-    this.DBService.deleteTrack(id);
+  // Update an existing track
+  async update(id: string, updateTrackDto: UpdateTrackDto): Promise<Track> {
+    await this.findTrackOrThrow(id); // Ensure track exists
+    const updatedTrack = await this.prisma.track.update({
+      where: { id },
+      data: { ...updateTrackDto },
+    });
+    return this.transformToTrackEntity(updatedTrack);
+  }
+
+  // Delete a track
+  async remove(id: string): Promise<void> {
+    await this.findTrackOrThrow(id); // Ensure track exists
+    await this.prisma.track.delete({ where: { id } });
+  }
+
+  // Transform database record to Track entity
+  private transformToTrackEntity(data: any): Track {
+    return plainToClass(Track, data);
+  }
+
+  // Helper method to find a track or throw an exception
+  private async findTrackOrThrow(id: string): Promise<any> {
+    const track = await this.prisma.track.findUnique({ where: { id } });
+    if (!track) {
+      throw new NotFoundException('Track not found');
+    }
+    return track;
   }
 }
