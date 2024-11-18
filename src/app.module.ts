@@ -4,7 +4,7 @@ import { UserModule } from './user/user.module';
 import { TrackModule } from './track/track.module';
 import { AlbumModule } from './album/album.module';
 import { FavoritesModule } from './favorites/favorites.module';
-import { Database } from './database/database.service';
+
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -17,6 +17,6 @@ import { PrismaModule } from './prisma/prisma.module';
     FavoritesModule,
     PrismaModule,
   ],
-  providers: [Database, PrismaService],
+  providers: [PrismaService],
 })
 export class AppModule {}

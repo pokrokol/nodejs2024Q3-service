@@ -2,29 +2,18 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToClass } from 'class-transformer';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
-
-  private async findUserOrFail(id: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return plainToClass(User, user);
-  }
-
-  private validatePassword(user: User, oldPassword: string): void {
-    if (oldPassword !== user.password)
-      throw new ForbiddenException('Wrong password');
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
@@ -32,22 +21,41 @@ export class UserService {
   }
 
   async findOne(id: string): Promise<User> {
-    const user = this.findUserOrFail(id);
-    return plainToInstance(User, user);
-  }
-
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = await this.prisma.user.create({ data: createUserDto });
-    return plainToInstance(User, newUser);
-  }
-
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = this.findUserOrFail(id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    this.validatePassword(await user, updateUserDto.oldPassword);
+    return plainToClass(User, user);
+  }
 
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          login: createUserDto.login,
+          password: createUserDto.password,
+        },
+      });
+      return plainToClass(User, user);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(`Login is taken`);
+      }
+      throw error;
+    }
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (updateUserDto.oldPassword !== user.password) {
+      throw new ForbiddenException('Incorrect password');
+    }
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
@@ -59,7 +67,7 @@ export class UserService {
   }
 
   async remove(id: string): Promise<void> {
-    const user = this.findUserOrFail(id); // Reuse helper for NotFoundException check
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
