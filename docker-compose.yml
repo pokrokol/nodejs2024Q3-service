@@ -22,7 +22,7 @@ services:
     networks:
       - library
   postgres:
-    image: postgres:latest # Use the latest version of the official PostgreSQL image
+    image: postgres:latest 
     container_name: container_postgres_db
     restart: always
     env_file:
