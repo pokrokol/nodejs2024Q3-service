@@ -8,6 +8,7 @@
   "scripts": {
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
+    "docker:scan": "docker scout cves applibrary && docker scout cves postgres",
     "start:dev-prisma": "npx prisma generate && npx prisma migrate dev --name init && npm run start:dev",
     "prebuild": "rimraf dist",
     "build": "nest build",
