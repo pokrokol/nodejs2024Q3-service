@@ -78,3 +78,5 @@ change .env.example to .env
 
 docker-compose up --build
 
+for tests: docker exec container_library npm run test
+
