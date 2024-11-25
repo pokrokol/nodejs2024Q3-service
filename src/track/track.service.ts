@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { Track } from './entities/track.entity'; // Ensure this import exists and is correct
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class TrackService {
@@ -32,7 +32,7 @@ export class TrackService {
       });
     } catch (error) {
       if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error instanceof PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
         throw new NotFoundException(`Track not found`);
@@ -51,7 +51,7 @@ export class TrackService {
 
   private handleNotFoundError(error: any, message: string): never {
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error instanceof PrismaClientKnownRequestError &&
       error.code === 'P2025'
     ) {
       throw new NotFoundException(message);
