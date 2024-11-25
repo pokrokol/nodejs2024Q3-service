@@ -14,7 +14,7 @@ services:
       - .env
     environment:
       PORT: ${PORT}
-      DATABASE_URL: ${DATABASE_URL_DOCKER}
+      DATABASE_URL: ${DATABASE_URL_FOR_DOCKER}
     depends_on:
       - postgres
     volumes:
