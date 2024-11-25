@@ -7,6 +7,8 @@ import { FavoritesModule } from './favorites/favorites.module';
 
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { LoggerModule } from './logger/logger.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { PrismaModule } from './prisma/prisma.module';
     AlbumModule,
     FavoritesModule,
     PrismaModule,
+    LoggerModule,
+    AuthModule,
   ],
   providers: [PrismaService],
 })
